@@ -37,47 +37,7 @@ These files are sufficient for the planned dashboard because `vg_charts.csv` con
 
 The files are comma-separated CSV files. The main table contains 81 platforms, 20 genres, 39,798 title strings, 3,383 publishers, and 8,862 developer strings. It has no completely duplicated rows. The supporting tables also have no completely duplicated rows. Most categorical fields are strings; sales and critic scores are floating-point values. Dates are stored as strings and must be parsed before time-based analysis. The country coordinate fields are read as strings in the supplied file and should be converted only after validating their contents.
 
-#### Initial observations
-
-Several attributes contain a large number of missing values. Approximately 70.4% of the values in the `total_sales` column and 89.6% of the values in the `critic_score` column are missing.
-
-The regional sales attributes, as well as `release_date`, `last_update`, and `developer`, should also be examined for missing values and their potential effect on later analyses.
-
-The main dataset contains repeated game titles across different platforms. Therefore, the number of records does not represent the number of unique games. A single game title may appear in multiple records when it was released on multiple platforms.
-
-The date attributes require conversion to datetime types for time-based analysis. The country coordinate fields should also be checked and cleaned before being used in geographical visualizations.
-
-The sales data is described in the project glossary as physical game copies sold. Consequently, it may not represent the entire video game market, including digital downloads.
-
-#### Data suitability
-
-The available datasets appear suitable for addressing the main objectives defined in the Business Understanding phase.
-
-The main dataset contains the attributes required to investigate:
-
-- Regional market preferences
-- Popular genres and platforms
-- Sales performance across regions
-- Sales trends over release years
-- Popular game titles
-- Publisher performance
-- Differences in platform popularity over time
-
-The high proportion of missing sales values may limit the reliability of analyses involving sales. Missing release dates may also affect analyses of historical trends and changes in popularity over time. Missing critic scores limit the number of games that can be included in analyses comparing review scores with sales performance.
-
-The sales data may not fully represent the overall video game market because it is described as physical game copies sold. Digital sales and other forms of market activity may not be included.
-
-The developer and publisher datasets contain city and country information that can potentially be joined with the geographical city and country datasets. These joins may support geographical analysis of developer and publisher locations.
-
-However, the supporting datasets cover only a subset of the unique developers and publishers in the main dataset. Join coverage should therefore be evaluated, and name standardization may be necessary to improve matching between datasets.
-
-Overall, the available attributes appear sufficient for developing the planned dashboard and conducting the initial exploratory analyses. Whether additional data is required will depend on the results of further data quality checks and the specific analyses selected for the dashboard.
-
-#### Conclusion
-
-The collected data provides a useful starting point for exploratory analysis and includes the main attributes required to address the project’s business objectives.
-
-However, further data cleaning and validation will be necessary before conducting detailed analyses, particularly those involving sales, dates, critic scores, geographical coordinates, or joins between the main and supporting datasets. The limitations of the sales data, including the possible absence of digital sales, should also be considered when interpreting the results.
+The data satisfies the core dashboard requirements, but not every row supports every question. Sales coverage is incomplete, especially for older or newer records, and there is no customer-level geography. Results must therefore report the number of observations used and must not interpret missing sales as zero.
 
 ## Task: Explore Data
 

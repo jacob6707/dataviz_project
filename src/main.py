@@ -273,4 +273,4 @@ def region_gap(a, b, min_sales):
     return fig
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, threaded=False)

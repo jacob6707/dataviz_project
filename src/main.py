@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -5,11 +6,29 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, dcc, html
 
+DATA = Path(__file__).resolve().parent.parent/"data"/"prepared"
+
+# cmd line args
+parser = argparse.ArgumentParser(prog="Mythic Realm Studios Game Market Explorer", 
+                                    description="Interactive dashboard for exploring game sales data")
+parser.add_argument("--port", "-p", type=int, help="Port to run the server on", default=8050, nargs="?")
+parser.add_argument("--host", "-H", type=str, help="Host to run the server on", default="127.0.0.1", nargs="?")
+parser.add_argument("--debug", "-d", action="store_true", help="Run the server in debug mode", default=False)
+parser.add_argument("--data-dir", "-D", type=str, help="Directory containing the prepared data files", default=str(DATA), nargs="?")
+parser.add_argument("--raw-data-dir", "-R", type=str, help="Directory containing the raw data files (if preprocessing is needed)", default=str(Path(DATA).resolve().parent), nargs="?")
+args = parser.parse_args()
+
 #DATA:
 
-DATA = Path(__file__).resolve().parent.parent/"data"/"prepared"
-games = pd.read_pickle(DATA/"games_prepared.pkl")
-reg = pd.read_pickle(DATA/"regional_sales_long.pkl")
+prepared_dir = Path(args.data_dir)
+raw_data_dir = Path(args.raw_data_dir)
+if (not (prepared_dir / "games_prepared.pkl").exists()
+        or not (prepared_dir / "regional_sales_long.pkl").exists()):
+    from util.preprocess import preprocess_data
+    preprocess_data(raw_data_dir, prepared_dir)
+
+games = pd.read_pickle(prepared_dir / "games_prepared.pkl")
+reg = pd.read_pickle(prepared_dir / "regional_sales_long.pkl")
 
 #missing values are unknown, keep only the ones with values
 reg = reg[reg["sales_millions"].notna()]
@@ -246,7 +265,9 @@ def titles_publishers(n, min_rows):
     pub = px.scatter(p, x="mean", y="cv", size="total", hover_name="publisher",
                      hover_data={"n": True, "total": ":.1f", "mean": ":.2f", "cv": ":.2f"},
                      log_x=True, size_max=45,
-                     labels={"mean": "Mean sales per release (M, log)", "cv": "Coefficient of variation"},
+                     labels={"mean": "Mean sales per release (M, log)",
+                             "cv": "Coefficient of variation",
+                             "publisher": column_label("publisher")},
                      title="Consistent (low CV) or hit-or-miss (high CV)? Bubble size = total sales")
     return tbar, pub
 
@@ -273,4 +294,4 @@ def region_gap(a, b, min_sales):
     return fig
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=False)
+    app.run(debug=args.debug, host=args.host, port=args.port, threaded=False)

@@ -22,13 +22,31 @@ args = parser.parse_args()
 
 prepared_dir = Path(args.data_dir)
 raw_data_dir = Path(args.raw_data_dir)
+dictionary_path = prepared_dir / "data_dictionary_prepared.pkl"
 if (not (prepared_dir / "games_prepared.pkl").exists()
-        or not (prepared_dir / "regional_sales_long.pkl").exists()):
+        or not (prepared_dir / "regional_sales_long.pkl").exists()
+        or not dictionary_path.exists()):
     from util.preprocess import preprocess_data
     preprocess_data(raw_data_dir, prepared_dir)
 
 games = pd.read_pickle(prepared_dir / "games_prepared.pkl")
 reg = pd.read_pickle(prepared_dir / "regional_sales_long.pkl")
+dictionary = pd.read_pickle(dictionary_path)
+
+descriptions = (dictionary.sort_values("source")
+                .drop_duplicates("Field")
+                .set_index("Field")["Description"]
+                .to_dict())
+descriptions.update({
+    "record_id": "Stable identifier for the original game-platform record",
+    "release_year": "Year the game was released",
+    "has_total_sales": "Whether global sales are available",
+    "sales_millions": "Sales of copies in millions",
+    "region": "Sales region",
+})
+
+def column_label(column, fallback=None):
+    return descriptions.get(column, fallback or column.replace("_", " ").title())
 
 #missing values are unknown, keep only the ones with values
 reg = reg[reg["sales_millions"].notna()]
@@ -156,19 +174,23 @@ def platforms(region, n):
     d = reg if region == "All regions" else reg[reg["region"] == region]
     top = d.groupby("platform")["sales_millions"].sum().nlargest(n).reset_index()
     bar = px.bar(top, x="platform", y="sales_millions",
-                 labels={"sales_millions": "Sales (millions)"},
+                 labels={"platform": column_label("platform"),
+                         "sales_millions": column_label("sales_millions")},
                  title=f"Most popular platforms: {region}")
     pv = reg.pivot_table(index="platform", columns="region",
                          values="sales_millions", aggfunc="sum").reindex(columns=REGIONS)
     share = pv.div(pv.sum()) * 100
     overall = reg.groupby("platform")["sales_millions"].sum().nlargest(n).index
     heat = px.imshow(share.loc[overall], text_auto=".1f", aspect="auto",
-                     labels={"color": "% of region sales"},
+                     labels={"x": column_label("region"),
+                             "y": column_label("platform"),
+                             "color": "% of region sales"},
                      title="Platform share of each region's sales (%)")
 
     rt = reg.groupby("region")["sales_millions"].sum().reindex(REGIONS).reset_index()
     rtot = px.bar(rt, x="region", y="sales_millions", color="region",
-                  labels={"sales_millions": "Sales (millions)"},
+                  labels={"region": column_label("region"),
+                          "sales_millions": column_label("sales_millions")},
                   title="Which region buys the most?")
     return bar, heat, rtot
 
@@ -187,19 +209,24 @@ def time_trends(rng, min_obs, mode):
     by_reg = r.groupby(["release_year", "region"], as_index=False)["sales_millions"].sum()
     lines = px.line(by_reg, x="release_year", y="sales_millions", color="region",
                     markers=True, category_orders={"region": REGIONS},
-                    labels={"sales_millions": "Sales (millions)"},
+                    labels={"release_year": column_label("release_year"),
+                            "region": column_label("region"),
+                            "sales_millions": column_label("sales_millions")},
                     title="Sales per release year in each region")
 
     yearly = g.groupby("release_year", as_index=False)["total_sales"].sum()
     peak = yearly.loc[yearly["total_sales"].idxmax()]
     glob = px.bar(yearly, x="release_year", y="total_sales",
-                  labels={"total_sales": "Global sales (millions)"},
+                  labels={"release_year": column_label("release_year"),
+                          "total_sales": column_label("total_sales")},
                   title=f"Global sales per release year (peak: {int(peak['release_year'])})")
 
     py = g.groupby(["release_year", "platform"], as_index=False)["total_sales"].sum()
     best = py.loc[py.groupby("release_year")["total_sales"].idxmax()]
     bestfig = px.bar(best, x="release_year", y="total_sales", color="platform",
-                     labels={"total_sales": "Sales (millions)"},
+                     labels={"release_year": column_label("release_year"),
+                             "platform": column_label("platform"),
+                             "total_sales": column_label("total_sales")},
                      title="Best-selling platform in each release year")
 
     ge = g.groupby(["release_year", "genre"], as_index=False)["total_sales"].sum()
@@ -207,7 +234,10 @@ def time_trends(rng, min_obs, mode):
         ge["total_sales"] = (ge["total_sales"]
                              / ge.groupby("release_year")["total_sales"].transform("sum") * 100)
     area = px.area(ge, x="release_year", y="total_sales", color="genre",
-                   labels={"total_sales": "Share of year (%)" if mode == "share" else "Sales (millions)"},
+                   labels={"release_year": column_label("release_year"),
+                           "genre": column_label("genre"),
+                           "total_sales": "Share of year (%)" if mode == "share"
+                           else column_label("total_sales")},
                    title="Genre popularity over time")
     return lines, glob, bestfig, area
 
@@ -222,14 +252,19 @@ def genres(mode, min_rows):
         pv = pv.div(pv.sum()) * 100
     pv = pv.loc[pv.sum(axis=1).sort_values(ascending=False).index]
     heat = px.imshow(pv, text_auto=".0f" if mode == "sales" else ".1f", aspect="auto",
-                     labels={"color": "% of region" if mode == "share" else "Sales (millions)"},
+                     labels={"x": column_label("region"),
+                             "y": column_label("genre"),
+                             "color": "% of region" if mode == "share"
+                             else column_label("sales_millions")},
                      title="Which regions prefer which genre?")
 
     gs = reg.groupby(["region", "genre"], as_index=False)["sales_millions"].sum()
     top3 = (gs.sort_values("sales_millions", ascending=False).groupby("region").head(3))
     top3fig = px.bar(top3, x="region", y="sales_millions", color="genre", barmode="group",
                      category_orders={"region": REGIONS},
-                     labels={"sales_millions": "Sales (millions)"},
+                     labels={"region": column_label("region"),
+                             "genre": column_label("genre"),
+                             "sales_millions": column_label("sales_millions")},
                      title="Top three genres per region")
 
     counts = games["platform"].value_counts()
@@ -239,7 +274,9 @@ def genres(mode, min_rows):
     ct = pd.crosstab(sub["platform"], sub["genre"], normalize="index") * 100
     ct = ct.loc[counts.reindex(ct.index).sort_values(ascending=False).index]
     spec = px.imshow(ct, text_auto=".0f", aspect="auto",
-                     labels={"color": "% of platform's releases"},
+                     labels={"x": column_label("genre"),
+                             "y": column_label("platform"),
+                             "color": "% of platform's releases"},
                      title=f"Do platforms specialise in a genre? (platforms with >= {min_rows} releases)")
     spec.update_layout(height=200 + 28 * len(ct))
     return heat, top3fig, spec
@@ -252,7 +289,8 @@ def titles_publishers(n, min_rows):
               .agg(title=("title", "first"), sales=("total_sales", "sum"))
               .nlargest(n, "sales"))
     tbar = px.bar(top, x="sales", y="title", orientation="h",
-                  labels={"sales": "Global sales (millions)", "title": ""},
+                  labels={"sales": column_label("total_sales"),
+                          "title": column_label("title")},
                   title="Best-selling titles worldwide")
     tbar.update_yaxes(autorange="reversed")
 
@@ -265,7 +303,9 @@ def titles_publishers(n, min_rows):
     pub = px.scatter(p, x="mean", y="cv", size="total", hover_name="publisher",
                      hover_data={"n": True, "total": ":.1f", "mean": ":.2f", "cv": ":.2f"},
                      log_x=True, size_max=45,
-                     labels={"mean": "Mean sales per release (M, log)",
+                     labels={"n": "Releases with sales",
+                             "total": "Total sales (millions)",
+                             "mean": "Mean sales per release (M, log)",
                              "cv": "Coefficient of variation",
                              "publisher": column_label("publisher")},
                      title="Consistent (low CV) or hit-or-miss (high CV)? Bubble size = total sales")
@@ -288,7 +328,9 @@ def region_gap(a, b, min_sales):
     top = w.nlargest(15, "gap")[[a, b]]
     top.index = o.groupby("key")["title"].first().reindex(top.index)
     fig = px.bar(top, orientation="h", barmode="group",
-                 labels={"value": "Sales (millions)", "index": "", "variable": "Region"},
+                 labels={"value": column_label("sales_millions"),
+                         "index": column_label("title"),
+                         "variable": column_label("region")},
                  title=f"Titles strong in {a} but weak in {b}")
     fig.update_yaxes(autorange="reversed")
     return fig

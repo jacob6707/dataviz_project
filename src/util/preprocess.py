@@ -5,6 +5,44 @@ import pandas as pd
 DATA_DIR = Path("../../data")
 OUTPUT_DIR = DATA_DIR / "prepared"
 
+def preprocess_data_dictionary(data_dir: Path = DATA_DIR, output_dir: Path = OUTPUT_DIR):
+  data_dir = Path(data_dir)
+  output_dir = Path(output_dir)
+  dictionary_dir = data_dir / "data_dictionary"
+  files = [
+      "vg_charts.csv",
+      "vg_developers.csv",
+      "vg_publishers.csv",
+      "vg_geo_cities.csv",
+      "vg_geo_countries.csv",
+  ]
+
+  dictionaries = []
+  for filename in files:
+      path = dictionary_dir / filename
+      dictionary = pd.read_csv(path)
+      required = {"Field", "Description"}
+      if not required.issubset(dictionary.columns):
+          raise ValueError(f"{path} must contain Field and Description columns")
+
+      current = dictionary[["Field", "Description"]].copy()
+      current["source"] = Path(filename).stem
+      current["Field"] = current["Field"].astype("string").str.strip()
+      current["Description"] = current["Description"].astype("string").str.strip()
+      dictionaries.append(current[["source", "Field", "Description"]])
+
+  result = pd.concat(dictionaries, ignore_index=True)
+  if result["Field"].isna().any() or result["Description"].isna().any():
+      raise ValueError("Data dictionary contains an empty field or description")
+  if result.duplicated(["source", "Field"]).any():
+      raise ValueError("Data dictionary contains duplicate fields in one source")
+
+  output_dir.mkdir(parents=True, exist_ok=True)
+  output_path = output_dir / "data_dictionary_prepared.pkl"
+  result.to_pickle(output_path)
+  print("Saved:", output_path, result.shape)
+  return result
+
 def preprocess_data(data_dir: Path = DATA_DIR, output_dir: Path = OUTPUT_DIR):
   data_dir = Path(data_dir)
   output_dir = Path(output_dir)
@@ -160,6 +198,7 @@ def preprocess_data(data_dir: Path = DATA_DIR, output_dir: Path = OUTPUT_DIR):
   output_dir.mkdir(parents=True, exist_ok=True)
   enriched.to_pickle(output_dir / "games_prepared.pkl")
   regional_sales.to_pickle(output_dir / "regional_sales_long.pkl")
+  preprocess_data_dictionary(data_dir, output_dir)
 
   print("Saved:")
   print(output_dir / "games_prepared.pkl", enriched.shape)

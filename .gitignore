@@ -1,3 +1,4 @@
 data/boxart_images
 .conda
 data/prepared
+**/__pycache__/

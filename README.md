@@ -16,39 +16,57 @@ modified CRISP-DM process; the report for each phase is in the `reports/` folder
 2. Create and activate a conda environment:
 
 ```bash
-   conda create -n ./.conda python=3.12 -y
+   conda create -p ./.conda python=3.12 -y
    conda activate ./.conda
 ```
 
 3. Install the packages:
 
 ```bash
-   conda install -c conda-forge pandas numpy plotly dash ipykernel jupyter -y
+  python -m pip install -r src/requirements.txt
 ```
 
-(If conda cannot find a package, use `pip install pandas numpy plotly dash ipykernel jupyter`.)
+## Run the app
 
-## Step 1: Create the prepared data (run once)
-
-The app does not read the raw CSV files directly. It reads two prepared files that are
-created by the preprocessing notebook.
-
-1. Open `src/notebooks/preprocessing.ipynb` and select the `dataviz` kernel.
-2. Run all cells from top to bottom.
-
-This creates `data/prepared/games_prepared.pkl` and `data/prepared/regional_sales_long.pkl`.
-The `data/prepared/` folder is excluded by `.gitignore`, so it must be created on each new
-machine. Without these files the app will not start.
-
-## Step 2: Run the app
-
-From the project root:
+From the project root, run:
 
 ```bash
 python src/main.py
 ```
 
-Then open http://127.0.0.1:8050 in a browser. Stop the app with `Ctrl+C`.
+If the prepared files do not exist, the application automatically preprocesses the raw CSV
+files in `data/` and creates these files:
+
+- `data/prepared/games_prepared.pkl`
+- `data/prepared/regional_sales_long.pkl`
+- `data/prepared/data_dictionary_prepared.pkl`
+
+Open http://127.0.0.1:8050 in a browser. Stop the server with `Ctrl+C`.
+
+### Command-line options
+
+The application supports the following options:
+
+| Option                 | Description                        | Default         |
+| ---------------------- | ---------------------------------- | --------------- |
+| `--port`, `-p`         | Port for the Dash server           | `8050`          |
+| `--host`, `-H`         | Host address for the Dash server   | `127.0.0.1`     |
+| `--debug`, `-d`        | Enable Dash debug mode             | Disabled        |
+| `--data-dir`, `-D`     | Directory containing prepared data | `data/prepared` |
+| `--raw-data-dir`, `-R` | Directory containing raw CSV files | `data`          |
+
+Examples:
+
+```bash
+# Use another port
+python src/main.py --port 8051
+
+# Enable debug mode
+python src/main.py --debug
+
+# Use custom data directories
+python src/main.py --data-dir C:\\path\\to\\prepared --raw-data-dir C:\\path\\to\\data
+```
 
 ## Using the app
 
@@ -72,12 +90,13 @@ counted as zero.
 data/
   vg_*.csv                  Original datasets
   data_dictionary/          Column descriptions
-  prepared/                 Created by preprocessing.ipynb (not in git)
+  prepared/                 Created automatically by the app (not in git)
 reports/                    CRISP-DM reports, one per phase
 src/
   main.py                   The Dash application
+    requirements.txt          Python dependencies for the application
   notebooks/
-    preprocessing.ipynb     Cleans and prepares the data (Phase 3)
+      preprocessing.ipynb     Optional preprocessing reference notebook
   util/
     boxart_download.py      Optional helper for downloading box art
 project.ipynb               Project template and instructions

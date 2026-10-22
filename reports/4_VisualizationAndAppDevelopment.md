@@ -31,12 +31,22 @@ groups most affected by small samples have a minimum-observation filter.
 **Architecture**
 
     data/vg_*.csv
-        -> src/notebooks/preprocessing.ipynb   (Phase 3, run once)
-        -> data/prepared/games_prepared.pkl, regional_sales_long.pkl
+        -> src/notebooks/preprocessing.ipynb   (Phase 3 development and verification)
+        -> src/util/preprocess.py              (deployment preprocessing utility)
+        -> data/prepared/games_prepared.pkl, regional_sales_long.pkl,
+           data_dictionary_prepared.pkl
         -> src/main.py   (Dash layout + callbacks + Plotly figures)
         -> web browser (http://127.0.0.1:8050)
 
-The app only reads the prepared data and never changes it.
+The notebook was used first to explore, verify, and document the data-preparation
+steps. For simpler deployment, that preparation logic was transferred to the
+reusable `src/util/preprocess.py` utility, so the application can create the
+prepared files directly from Python without requiring Jupyter or manual cell
+execution. The notebook remains as a reference and reproducibility artifact.
+
+The app normally reads the prepared data without changing it. If any prepared
+file is missing, `src/main.py` runs `util.preprocess.preprocess_data` to create the
+prepared outputs before loading them.
 
 **Layout.** One page with a title, a coverage note, and four tabs. Each tab has
 controls at the top and its charts below. A change in a control updates all
@@ -62,10 +72,14 @@ charts on that tab through a callback.
 
 The app is `src/main.py`. To start it:
 
-1. Create the prepared data by running `src/notebooks/preprocessing.ipynb`
-   from top to bottom (creates `data/prepared/*.pkl`).
-2. Activate the conda environment with `pandas`, `numpy`, `plotly` and `dash`.
-3. Run `python src/main.py` from the project root and open http://127.0.0.1:8050.
+1. Activate the conda environment with `pandas`, `numpy`, `plotly` and `dash`.
+2. Run `python src/main.py` from the project root and open http://127.0.0.1:8050.
+
+When the prepared files are missing, `src/main.py` automatically calls
+`util.preprocess.preprocess_data` to run the deployment preprocessing utility
+and create `data/prepared/*.pkl`. The earlier
+`src/notebooks/preprocessing.ipynb` workflow remains available for reference,
+but is not required to start the deployed app.
 
 Choose a tab and use its controls; the charts on that tab update at once.
 

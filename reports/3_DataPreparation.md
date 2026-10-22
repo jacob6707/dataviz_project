@@ -56,7 +56,7 @@ A separate regional table was created by reshaping the four regional sales colum
 
 - North America
 - Japan
-- Europe/Africa
+- Europe and Africa
 - Other
 
 This resulted in 256,064 rows in the regional table:
@@ -106,20 +106,20 @@ The regional sales data was changed from wide format to long format.
 
 In the original wide format, each region had its own column:
 
-| title | na_sales | jp_sales | pal_sales | other_sales |
-|---|---:|---:|---:|---:|
-| Example Game | 2.1 | 0.4 | 1.8 | 0.3 |
+| title        | na_sales | jp_sales | pal_sales | other_sales |
+| ------------ | -------: | -------: | --------: | ----------: |
+| Example Game |      2.1 |      0.4 |       1.8 |         0.3 |
 
 In the long format, the region and its sales value are stored in separate columns:
 
-| title | region | sales_millions |
-|---|---|---:|
-| Example Game | North America | 2.1 |
-| Example Game | Japan | 0.4 |
-| Example Game | Europe/Africa | 1.8 |
-| Example Game | Other | 0.3 |
+| title        | region            | sales_millions |
+| ------------ | ----------------- | -------------: |
+| Example Game | North America     |            2.1 |
+| Example Game | Japan             |            0.4 |
+| Example Game | Europe and Africa |            1.8 |
+| Example Game | Other             |            0.3 |
 
-The two prepared tables were saved as Pickle files in the `data/prepared/` directory. These files can be loaded by the Dash application without repeating the complete cleaning and joining process each time the application starts.
+The prepared tables were saved as Pickle files in the `data/prepared/` directory. The deployment utility also creates `data_dictionary_prepared.pkl`, which supplies field descriptions to the Dash application. These files can be loaded by the application without repeating the complete cleaning and joining process each time it starts.
 
 ## Main Output
 
@@ -127,10 +127,10 @@ The two prepared tables were saved as Pickle files in the `data/prepared/` direc
 
 The data preparation process produced the following datasets:
 
-| File | Purpose | Rows | Columns |
-|---|---|---:|---:|
-| `data/prepared/games_prepared.pkl` | Prepared game-platform data with derived attributes and optional company and country information | 64,016 | 27 |
-| `data/prepared/regional_sales_long.pkl` | Regional sales in long format for filtering, grouping, and regional visualizations | 256,064 | 9 |
+| File                                    | Purpose                                                                                          |    Rows | Columns |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------ | ------: | ------: |
+| `data/prepared/games_prepared.pkl`      | Prepared game-platform data with derived attributes and optional company and country information |  64,016 |      27 |
+| `data/prepared/regional_sales_long.pkl` | Regional sales in long format for filtering, grouping, and regional visualizations               | 256,064 |       9 |
 
 ### Output: Dataset Descriptions
 
@@ -223,4 +223,4 @@ The following points may be reviewed during later project phases:
 - Country-name differences may cause some headquarters locations to remain unknown.
 - Sales coverage is incomplete. Only 18,922 of the 64,016 rows contain a `total_sales` value, corresponding to approximately 29.56% of the main dataset.
 - Sales-based charts should display the number of observations used and should not interpret missing values as zero.
-- The prepared Pickle files are generated from the original CSV files and the preprocessing notebook. The team must decide whether these generated files should be included in the final submission or recreated as part of the project setup.
+- The notebook was used to develop and verify the preparation workflow. The reusable `src/util/preprocess.py` utility now generates the prepared Pickle files from the original CSV files for deployment. The prepared files can be included in the final submission or recreated automatically during project setup.

@@ -2,7 +2,7 @@
 
 # Phase: Evaluation
 
-This CRISP-DM phase has been modified somewhat to better align with the currect project.
+This CRISP-DM phase has been modified somewhat to better align with the current project.
 
 ## Task: Evaluate Results
 
@@ -61,6 +61,10 @@ the _data mining_ engagement in order to determine if there is any important fac
 
 Summarize the process review and highlight activities that have been missed and those that should really be repeated.
 
+During testing, we found that the original notebook-based preprocessing workflow was fragile: the prepared data had to be generated manually in the correct kernel and environment before the app could start. We therefore moved the preprocessing logic into `src/util/preprocess.py`. The app can now be started with a single command, `python src/main.py`, which automatically calls `util.preprocess.preprocess_data` when the prepared files are missing. This made the setup more reproducible, easier to document, and better suited for deployment. Phase 3, the app description in Phase 4, and the deployment instructions were updated accordingly.
+
+**Lesson learned:** notebooks are useful for exploration and verification, but a reproducible deployment pipeline should be implemented in a Python module.
+
 The project followed the main CRISP-DM activities appropriately:
 
 - The business objectives and data-mining questions were defined.
@@ -74,7 +78,7 @@ The project followed the main CRISP-DM activities appropriately:
 
 Several activities should be repeated or improved before final deployment.
 
-First, the preprocessing notebook and standalone preprocessing module should be run from a clean environment to verify that the workflow is reproducible. The relative data path in the notebook should also be checked because it depends on the notebook working directory.
+First, the standalone preprocessing utility should be run from a clean environment to verify that deployment is reproducible. The notebook should remain available for reproducing and inspecting the original development workflow, and its relative data path should be checked because it depends on the notebook working directory.
 
 Second, every tab and control in the Dash application should be tested manually, including:
 

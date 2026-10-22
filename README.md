@@ -94,10 +94,13 @@ data/
 reports/                    CRISP-DM reports, one per phase
 src/
   main.py                   The Dash application
-    requirements.txt          Python dependencies for the application
+    requirements.txt        Python dependencies for the application
   notebooks/
-      preprocessing.ipynb     Optional preprocessing reference notebook
+      preprocessing.ipynb   Optional preprocessing reference notebook
   util/
     boxart_download.py      Optional helper for downloading box art
+    preprocess.py           Utility for preprocessing data, copied over from
+                            preprocessing.ipynb, with added data description
+                            preprocessing
 project.ipynb               Project template and instructions
 ```

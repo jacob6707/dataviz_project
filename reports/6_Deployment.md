@@ -1,6 +1,6 @@
 # Phase: Deployment
 
-This CRISP-DM phase has been modified somewhat to better align with the currect project.
+This CRISP-DM phase has been modified somewhat to better align with the current project.
 
 ## Task: Produce Final Report
 
@@ -35,7 +35,7 @@ These limitations mean that the dashboard provides exploratory comparisons based
 
 ### Data Preparation
 
-The data was cleaned using pandas. Text fields were stripped of surrounding whitespace, empty strings were converted to missing values, dates were converted to datetime values, and numeric fields were converted to numeric types.
+The data was cleaned using pandas. The notebook was used first to develop and verify the preparation workflow. For simpler deployment, the reusable `src/util/preprocess.py` utility now performs these steps from Python. Text fields are stripped of surrounding whitespace, empty strings are converted to missing values, dates are converted to datetime values, and numeric fields are converted to numeric types.
 
 The following derived fields were created:
 
@@ -97,13 +97,16 @@ The app demo should take approximately 5–6 minutes and should focus on two or 
 ### Preparation before the seminar
 
 1. Activate the project environment.
-2. Run the preprocessing notebook from top to bottom, or allow the application to create the prepared files automatically.
-3. From the project root, start the application with:
+2. From the project root, start the application with:
 
    `python src/main.py`
 
-4. Open `http://127.0.0.1:8050` in a browser.
-5. Test the required controls before the presentation and keep the prepared data available locally.
+   If the prepared files are missing, `src/main.py` automatically calls
+   `util.preprocess.preprocess_data` to create them. The notebook remains available for
+   reference and reproducibility, but is not required to start the application.
+
+3. Open `http://127.0.0.1:8050` in a browser.
+4. Test the required controls before the presentation and keep the prepared data available locally.
 
 ### Suggested demo sequence
 
@@ -138,8 +141,8 @@ The CRISP-DM process worked well for organizing the work and identifying data li
 ### Deployment and submission checklist
 
 - Create or activate the Python environment.
-- Install pandas, numpy, Plotly, Dash, Jupyter, and the required notebook dependencies.
-- Run the preprocessing notebook or verify automatic preprocessing.
+- Install pandas, numpy, Plotly, and Dash. Jupyter and the notebook dependencies are optional unless the development workflow needs to be reproduced.
+- Verify automatic preprocessing with `util.preprocess.preprocess_data`, or inspect the original notebook if reproducing the preparation workflow.
 - Start the application with `python src/main.py`.
 - Test all tabs, controls, empty states, and regional comparisons.
 - Prepare a presentation lasting approximately 15 minutes.

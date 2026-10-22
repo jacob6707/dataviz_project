@@ -8,7 +8,7 @@ from dash import Dash, Input, Output, dcc, html
 
 DATA = Path(__file__).resolve().parent.parent/"data"/"prepared"
 
-# cmd line args
+# Command-line arguments
 parser = argparse.ArgumentParser(prog="Mythic Realm Studios Game Market Explorer", 
                                     description="Interactive dashboard for exploring game sales data")
 parser.add_argument("--port", "-p", type=int, help="Port to run the server on", default=8050, nargs="?")

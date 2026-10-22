@@ -16,14 +16,14 @@ modified CRISP-DM process; the report for each phase is in the `reports/` folder
 2. Create and activate a conda environment:
 
 ```bash
-   conda create -p ./.conda python=3.12 -y
-   conda activate ./.conda
+conda create -p ./.conda python=3.12 -y
+conda activate ./.conda
 ```
 
 3. Install the packages:
 
 ```bash
-  python -m pip install -r src/requirements.txt
+python -m pip install -r src/requirements.txt
 ```
 
 ## Run the app
